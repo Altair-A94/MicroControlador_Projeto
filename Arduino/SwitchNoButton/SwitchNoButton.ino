@@ -7,29 +7,34 @@ void setup() {
   pinMode(SWITCH_PIN, INPUT_PULLUP);  // Switch com pull-up
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
-
+  
   Serial.begin(9600);
 }
 
 void loop() {
   int estadoSwitch = digitalRead(SWITCH_PIN);
 
-  if (estadoSwitch == LOW && !esperaConfirmacao) {
+  if (estadoSwitch == HIGH && !esperaConfirmacao) {
     Serial.println("ATIVADO");
     esperaConfirmacao = true;
   }
 
-  if (Serial.available()) {
+  if (esperaConfirmacao && Serial.available()) {
     String resposta = Serial.readStringUntil('\n');
     resposta.trim();
     if (resposta == "CONFIRMADO") {
-      digitalWrite(BUZZER_PIN, HIGH);
-      delay(1000);
-      digitalWrite(BUZZER_PIN, LOW);
+      tone(BUZZER_PIN, 2000);
+      delay(200);
+      noTone(BUZZER_PIN);
       esperaConfirmacao = false;
+
+      // Aguarda até o switch ser solto para evitar repetição contínua
+      while (digitalRead(SWITCH_PIN) == HIGH) {
+        delay(10);
+      }
     }
   }
 
-  delay(100);
+  delay(50);
 }
 
