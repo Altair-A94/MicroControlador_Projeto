@@ -8,11 +8,22 @@ unsigned long ultimaTroca = 0;
 const unsigned long debounceDelay = 50;
 bool botaoPressionado = false; // Flag para controlar a ação do botão
 
+unsigned long waitStartTime = 0;
+const unsigned long waitTimeout = 3000; // 3 seconds timeout for permission
+bool waitingForPermission = false;
+bool permissionGranted = false;
+
 void setup() {
+  Serial.begin(9600);                  // Inicializa comunicação serial
   pinMode(SWITCH_PIN, INPUT_PULLUP);   // Switch magnético
   pinMode(BUTTON_PIN, INPUT_PULLUP);   // Botão com pull-up interno
   pinMode(BUZZER_PIN, OUTPUT);
   noTone(BUZZER_PIN);                  // Buzzer começa desligado
+
+  // Verifica se o botão está conectado (estado sempre HIGH indica desconectado)
+  if (digitalRead(BUTTON_PIN) == HIGH) {
+    Serial.println("Aviso: Botão não está conectado.");
+  }
 }
 
 void loop() {
@@ -32,6 +43,7 @@ void loop() {
       if (!botaoPressionado) {
         // ...alterna o estado do alarme
         alarmeAtivo = !alarmeAtivo;
+        Serial.println("Botão pressionado, estado do alarme alterado."); // Envia mensagem para o monitor serial
         botaoPressionado = true; // Marca o botão como pressionado
       }
     }
@@ -50,15 +62,43 @@ void loop() {
     int estadoSwitch = digitalRead(SWITCH_PIN);
 
     if (estadoSwitch == HIGH) {
-      tone(BUZZER_PIN, 2000);  // Alarme sonoro
-      delay(100);
-      noTone(BUZZER_PIN);
-      delay(100);
+      if (!waitingForPermission && !permissionGranted) {
+        Serial.println("ATIVADO"); // Solicita permissão para Python
+        waitingForPermission = true;
+        waitStartTime = millis();
+      }
+
+      if (waitingForPermission) {
+        if (Serial.available() > 0) {
+          String response = Serial.readStringUntil('\n');
+          response.trim();
+          if (response == "CONFIRMADO") {
+            permissionGranted = true;
+            waitingForPermission = false;
+          }
+        } else if (millis() - waitStartTime > waitTimeout) {
+          // Timeout, cancela permissão
+          waitingForPermission = false;
+        }
+      }
+
+      if (permissionGranted) {
+        tone(BUZZER_PIN, 2000);  // Alarme sonoro
+        delay(100);
+        noTone(BUZZER_PIN);
+        delay(100);
+      } else {
+        noTone(BUZZER_PIN);
+      }
     } else {
       noTone(BUZZER_PIN);
+      permissionGranted = false; // Reset permission when switch is off
+      waitingForPermission = false;
     }
   } else {
     // Modo desligado: sempre desliga o buzzer
     noTone(BUZZER_PIN);
+    permissionGranted = false;
+    waitingForPermission = false;
   }
 }
