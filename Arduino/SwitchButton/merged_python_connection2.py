@@ -6,7 +6,7 @@ import serial
 # Configurações do Gmail
 REMETENTE = 'meuarduino2025@gmail.com'              # substitua pelo seu e-mail Gmail
 SENHA_APP = 'xfnv fiiw ddll khvh'          # substitua pela senha do app gerada no Google
-DESTINATARIO = 'destinatario@example.com'    # substitua pelo e-mail do destinatário
+DESTINATARIO = 'arduinotest500@maildrop.cc'    # substitua pelo e-mail do destinatário
 
 # Configura porta serial do Arduino
 arduino = serial.Serial('COM5', 9600)

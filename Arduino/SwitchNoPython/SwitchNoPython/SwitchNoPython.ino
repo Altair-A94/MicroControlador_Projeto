@@ -1,6 +1,6 @@
 #define SWITCH_PIN 2        // Pino do magnetic switch
 #define BUZZER_PIN 8        // Pino do buzzer
-#define BUTTON_PIN 10       // Botão agora está no pino 10
+#define BUTTON_PIN 4       // Botão agora está no pino 10
 
 bool alarmeAtivo = true;        // Começa com o alarme ligado
 bool ultimoEstadoBotao = HIGH;  // Estado anterior do botão

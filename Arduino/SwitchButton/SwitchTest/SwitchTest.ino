@@ -1,69 +1,69 @@
-#define SWITCH_PIN 2        // Pino do magnetic switch
-#define BUZZER_PIN 8        // Pino do buzzer
-#define BUTTON_PIN 4        // Pino do botão
+#define SWITCH_PIN 2
+#define BUZZER_PIN 8
+#define BUTTON_PIN 4
 
-bool alarmeAtivo = true;        // Começa com o alarme ligado
-bool ultimoEstadoBotao = HIGH; // Inicializa com o botão não pressionado (pull-up)
+bool alarmeAtivo = true;
+bool ultimoEstadoBotao = HIGH;
 unsigned long ultimaTroca = 0;
 const unsigned long debounceDelay = 50;
-bool botaoPressionado = false; // Flag para controlar a ação do botão
+bool botaoPressionado = false;
 
 unsigned long waitStartTime = 0;
-const unsigned long waitTimeout = 3000; // 3 seconds timeout for permission
+const unsigned long waitTimeout = 3000;
 bool waitingForPermission = false;
 bool permissionGranted = false;
 
 void setup() {
-  Serial.begin(9600);                  // Inicializa comunicação serial
-  pinMode(SWITCH_PIN, INPUT_PULLUP);   // Switch magnético
-  pinMode(BUTTON_PIN, INPUT_PULLUP);   // Botão com pull-up interno
+  Serial.begin(9600);
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);
-  noTone(BUZZER_PIN);                  // Buzzer começa desligado
+  noTone(BUZZER_PIN);
 
-  // Verifica se o botão está conectado (estado sempre HIGH indica desconectado)
+
   if (digitalRead(BUTTON_PIN) == HIGH) {
     Serial.println("Aviso: Botão não está conectado.");
   }
 }
 
 void loop() {
-  // Leitura do botão
+
   bool estadoBotaoAtual = digitalRead(BUTTON_PIN);
 
-  // Verifica se houve mudança no estado do botão
+
   if (estadoBotaoAtual != ultimoEstadoBotao) {
-    ultimaTroca = millis(); // Registra o tempo da mudança
+    ultimaTroca = millis();
   }
 
-  // Verifica se o tempo de debounce passou
+
   if ((millis() - ultimaTroca) >= debounceDelay) {
-    // Se o estado do botão mudou *e* o debounce passou, então...
+
     if (estadoBotaoAtual == LOW && ultimoEstadoBotao == HIGH) {
-      // ...e se o botão ainda não foi considerado pressionado...
+
       if (!botaoPressionado) {
-        // ...alterna o estado do alarme
+
         alarmeAtivo = !alarmeAtivo;
-        Serial.println("Botão pressionado, estado do alarme alterado."); // Envia mensagem para o monitor serial
-        botaoPressionado = true; // Marca o botão como pressionado
+        Serial.println("Botão pressionado, estado do alarme alterado.");
+        botaoPressionado = true; //
       }
     }
 
-    // Se o botão foi liberado...
+    //
     if (estadoBotaoAtual == HIGH && ultimoEstadoBotao == LOW) {
-      botaoPressionado = false; // Reseta a flag quando o botão é liberado
+      botaoPressionado = false; //
     }
 
-    // Atualiza o último estado do botão *após* o debounce
+    //
     ultimoEstadoBotao = estadoBotaoAtual;
   }
 
-  // Lógica do alarme
+  //
   if (alarmeAtivo) {
     int estadoSwitch = digitalRead(SWITCH_PIN);
 
     if (estadoSwitch == HIGH) {
       if (!waitingForPermission && !permissionGranted) {
-        Serial.println("ATIVADO"); // Solicita permissão para Python
+        Serial.println("ATIVADO"); //
         waitingForPermission = true;
         waitStartTime = millis();
       }
@@ -83,7 +83,7 @@ void loop() {
       }
 
       if (permissionGranted) {
-        tone(BUZZER_PIN, 2000);  // Alarme sonoro
+        tone(BUZZER_PIN, 4000);
         delay(100);
         noTone(BUZZER_PIN);
         delay(100);
@@ -92,11 +92,11 @@ void loop() {
       }
     } else {
       noTone(BUZZER_PIN);
-      permissionGranted = false; // Reset permission when switch is off
+      permissionGranted = false;
       waitingForPermission = false;
     }
   } else {
-    // Modo desligado: sempre desliga o buzzer
+
     noTone(BUZZER_PIN);
     permissionGranted = false;
     waitingForPermission = false;
